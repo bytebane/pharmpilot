@@ -120,6 +120,31 @@ services:
         limits:
           memory: 768m  # Hard memory limit
 
+  # Init container for first-time setup only
+  pharmpilot-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder  # Use the builder stage which has all dependencies
+    container_name: pharmpilot-init
+    env_file:
+      - .env
+    networks:
+      - db_net
+    depends_on:
+      - db-postgres
+      - elastic-search
+    command: |
+      sh -c "
+        echo 'Running first-time initialization...'
+        npx prisma db push
+        npx prisma db seed
+        npx tsx scripts/sync-items-elastic.ts
+        echo 'Initialization complete!'
+      "
+    profiles:
+      - init  # Only run when explicitly requested
+
 volumes:
   letsencrypt:
   posty_data:

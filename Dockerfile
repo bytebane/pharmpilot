@@ -3,6 +3,11 @@
 FROM node:24-slim AS common_base
 WORKDIR /app
 
+# Install OpenSSL and other required packages
+RUN apt-get update -y && \
+    apt-get install -y openssl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
 # Install dependencies
 # (Copy these first to leverage Docker cache for dependencies)
 COPY package.json ./
